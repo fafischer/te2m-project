@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>de.te2m.project</groupId>
+	<artifactId>parent</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>te2m Project Parent</name>
+	<description>Requirement management</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>11</java.version>
+
+		<openapi.source.directory>${basedir}/src/main/openapi</openapi.source.directory>
+		<openapi.source.filename>openapi.yaml</openapi.source.filename>
+		<openapi.output.directory>${project.build.directory}/generated-sources/openapi</openapi.output.directory>
+
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+		<maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+		<compiler-plugin.version>3.8.1</compiler-plugin.version>
+		<maven.compiler.parameters>true</maven.compiler.parameters>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
+		<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
+		<quarkus.version>1.8.1.Final</quarkus.version>
+		<quarkus-plugin.version>${quarkus.version}</quarkus-plugin.version>
+		<quarkus.platform.version>${quarkus.version}</quarkus.platform.version>
+		<surefire-plugin.version>2.22.1</surefire-plugin.version>
+
+		<frontend-plugin.version>1.10.0</frontend-plugin.version>
+
+	</properties>
+	<modules>
+		<module>openapi</module>
+		<!--<module>openapi-quarkus-impl</module>-->
+		<module>quarkus-parent</module>
+		<module>web-app-mvn</module>
+	</modules>
+</project>

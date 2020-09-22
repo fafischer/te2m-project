@@ -1,0 +1,1297 @@
+openapi: 3.0.3
+
+info:
+  title: "${project.name}"
+  version: "${project.version}"
+  description: |
+    "${project.description}"
+    
+  contact:
+    name: 'Suggestions, contact, support and error reporting'
+    url: 'https://www.te2m.de'
+    email: api@te2m.de
+
+tags:
+  - name: Project
+    description: Services providing project related data
+  - name: Usecase
+    description: | 
+      Services providing use case related data.
+      
+      In software and systems engineering, a use case is a list of actions or event steps typically defining the interactions between a role (known in the Unified Modeling Language (UML) as an actor) and a system to achieve a goal.
+  - name: Risk
+    description: | 
+      Services providing risk related data.
+      
+      In simple terms, risk is the possibility of something bad happening. Risk involves uncertainty about the effects/implications of an activity with respect to the releated use cases. 
+      
+      Risks may be either related to the project / implementation scope or the runtime scope of the software components implementing those use cases.
+  - name: Criterias
+    description: | 
+      Services providing acceptance criteria related data.
+      
+      Acceptance criteria are the criteria that a system or component must satisfy in order to be accepted by a user, customer, or other authorized entity.
+      
+  - name: Components
+    description: |
+    
+      Services providing data related to software components
+      
+      An software component is a software package, a web service, a web resource, or a module that encapsulates a set of related functions (or data).
+
+  - name: Actors
+    description: |
+    
+      Services providing data related to actors
+      
+      Actors may represent roles played by human users, external hardware, or other subjects. Actors do not necessarily represent specific physical entities but merely particular facets (i.e., “roles”) of some entities that are relevant to the specification of its associated use cases. A single physical instance may play the role of several different actors and a given actor may be played by multiple different instances..
+
+
+servers:
+  - url: 'http://localhost:8081'
+
+paths:
+
+#
+# Projects
+#
+
+
+  '/projects':
+    get:
+      tags:
+        - Project
+      operationId: getAllProjects
+      description: Provides the data for all projects
+      responses:
+        '200':
+          description: The requested project data.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/ProjectDataView'
+        '401':
+          description: The identity of the requesting user could not be determined.
+        '403':
+          description: The requesting user lacks sufficient permissions to access the requested report.
+        '404':
+          $ref: '#/components/responses/NotFound'      
+      security:
+        - bearerAuth: []
+    post:
+      tags:
+        - Project
+      operationId: createProjects
+      description: Create new project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectEditCommand'
+      responses:
+        '200':
+          description: The requested project data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDataView'
+        '401':
+          description: The identity of the requesting user could not be determined.
+        '403':
+          description: The requesting user lacks sufficient permissions to access the requested report.
+        '404':
+          $ref: '#/components/responses/NotFound'  
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+      security:
+        - bearerAuth: []
+  '/project/{projectID}':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Project
+      operationId: getProjectByID
+      description: Return the project 
+      responses:
+        '200':
+          description: The requested project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDataView'
+          links:
+            getProjectByIDLink:
+              operationId: getProjectByID
+              parameters:
+                projectID: '$response.body#/id'
+              description: |
+                The link to the current project
+            getAllProjectsLink:
+              operationId: getAllProjects
+              description: |
+                The link for retrieving all projects.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Project
+      operationId: postCommandToProject
+      description: Apply the provided command to the project identified with the provided ID. 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInstanceCommand'
+      responses:
+        '200':
+          description: The requested project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+
+#
+# Usecases
+# 
+
+  '/project/{projectID}/usecase':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Usecase
+      operationId: getUsecases
+      description: Returns all use cases matching the provided filter criterias 
+      responses:
+        '200':
+          description: The matching usecases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UseCaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Usecase
+      operationId: createUsecase
+      description: Create a new use case. 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UseCaseEditCommand'
+      responses:
+        '200':
+          description: The new use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UseCaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+  '/project/{projectID}/usecase/{usecaseID}/':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: usecaseID
+        description: ID of an usecase
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Usecase
+      operationId: getUsecaseByID
+      description: Returns the use case identified by the provided IDs 
+      responses:
+        '200':
+          description: The matching usecase
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UseCaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Usecase
+      operationId: updateUsecase
+      description: Update the use case identified by the provided IDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UseCaseInstanceCommand'
+      responses:
+        '200':
+          description: The updated use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UseCaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+  '/project/{projectID}/usecase/{usecaseID}/dependencies':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: usecaseID
+        description: ID of an usecase
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Usecase
+      operationId: getUsecaseDependenciesByID
+      description: Returns the dependen use cases identified by the provided IDs 
+      responses:
+        '200':
+          description: The matching usecases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DependendUseCaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+#
+# Actors
+# 
+
+  '/project/{projectID}/actor':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Actors
+      operationId: getActors
+      description: Returns all actors matching the provided filter criterias 
+      responses:
+        '200':
+          description: The matching actors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActorDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Actors
+      operationId: createActor
+      description: Create a new actor. 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActorEditCommand'
+      responses:
+        '200':
+          description: The new actor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActorDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+  '/project/{projectID}/actor/{actorID}/':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: actorID
+        description: ID of an actor
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Actors
+      operationId: getActorByID
+      description: Returns the actor identified by the provided IDs 
+      responses:
+        '200':
+          description: The matching actor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActorDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Actors
+      operationId: updateActor
+      description: Update the actor identified by the provided IDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActorInstanceCommand'
+      responses:
+        '200':
+          description: The updated actor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActorDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+
+
+#
+# Risk Management
+#
+
+  '/project/{projectID}/risk':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Risk
+      operationId: getRisksForProject
+      description: Returns all risks matching the provided filter criterias 
+      responses:
+        '200':
+          description: The matching risks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RiskDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Risk
+      operationId: createRisk
+      description: Create a new risk definition. 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskEditCommand'
+      responses:
+        '200':
+          description: The new risk definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+  '/project/{projectID}/risk/{riskID}/':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: riskID
+        description: ID of an risk definition
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Risk
+      operationId: getRiskByID
+      description: Returns the risks identified by the provided IDs 
+      responses:
+        '200':
+          description: The matching risk
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Risk
+      operationId: updateRisk
+      description: Update the risk identified by the provided IDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskInstanceCommand'
+      responses:
+        '200':
+          description: The updated risk
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+
+#
+# closing / acceptance criterias
+#
+
+  '/project/{projectID}/criteria':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Criterias
+      operationId: getCriterias
+      description: Returns all acceptance criterias matching the provided filter criterias 
+      responses:
+        '200':
+          description: The matching criterias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CriteriaBaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Criterias
+      operationId: createCriteria
+      description: Create a new acceptance criteria. 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriteriaEditCommand'
+      responses:
+        '200':
+          description: The new acceptance criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CriteriaBaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+  '/project/{projectID}/criteria/{criteriaID}/':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: criteriaID
+        description: ID of an acceptance criteria
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Criterias
+      operationId: getCriteriaByID
+      description: Returns the acceptance criterias identified by the provided IDs 
+      responses:
+        '200':
+          description: The matching acceptance criterias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CriteriaBaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Criterias
+      operationId: updateCriterias
+      description: Update the acceptance criteria identified by the provided IDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriteriaInstanceCommand'
+      responses:
+        '200':
+          description: The updated criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CriteriaBaseDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+
+#
+# Components
+#
+
+  '/project/{projectID}/component':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Components
+      operationId: getComponents
+      description: Returns all software components matching the provided filter criterias 
+      responses:
+        '200':
+          description: The matching criterias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComponentDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Components
+      operationId: createComponent
+      description: Create a new software component. 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComponentEditCommand'
+      responses:
+        '200':
+          description: The new acceptance criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+  '/project/{projectID}/component/{componentID}/':
+    parameters:
+      - in: path
+        name: projectID
+        description: ID of an project
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: componentID
+        description: ID of an software component
+        schema:
+          type: string
+        required: true
+    get:
+      tags:
+        - Components
+      operationId: getComponentByID
+      description: Returns the software component identified by the provided IDs 
+      responses:
+        '200':
+          description: The matching acceptance criterias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Components
+      operationId: updateComponent
+      description: Update the acceptance criteria identified by the provided IDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComponentInstanceCommand'
+      responses:
+        '200':
+          description: The updated use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentDataView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/DuplicateMessageId'
+
+
+
+components:
+  schemas:
+#
+# Base definitions
+#
+    Identifyable:
+      type: object
+      properties:
+        id:
+          type: string
+    Timestamped:
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time
+        lastUpdated:
+          type: string
+          format: date-time
+    Authored:
+      type: object
+      properties:
+        createdBy:
+          type: string
+        lastUpdatedBy:
+          type: string
+    Named:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required: 
+        - name      
+    DataView:
+      allOf:
+        - $ref: '#/components/schemas/Identifyable'
+        - $ref: '#/components/schemas/Timestamped'   
+        - $ref: '#/components/schemas/Authored'
+
+    IDList:
+      type: array
+      items:
+        type: string
+
+#
+# Comment data
+#
+
+    CommentView:
+      allOf:
+        - $ref: '#/components/schemas/DataView'
+        - type: object
+          properties:
+            comment: 
+              type: string
+    CommentListView:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentView'
+# 
+# Project data
+#
+
+    ProjectBaseData:
+      allOf:
+        - $ref: '#/components/schemas/Named'
+        - type: object
+          properties:
+            locked:
+              type: boolean
+    ProjectBaseDataView:
+      allOf:
+        - $ref: '#/components/schemas/ProjectBaseData'
+        - $ref: '#/components/schemas/DataView'
+    ProjectDataView:
+      allOf:
+        - $ref: '#/components/schemas/ProjectBaseDataView'
+        - type: object
+          properties:
+            comments:
+              $ref: '#/components/schemas/IDList'
+            actors:
+              $ref: '#/components/schemas/IDList'
+            usecases:
+              $ref: '#/components/schemas/IDList'
+            risks:
+              $ref: '#/components/schemas/IDList'
+            criterias:
+              $ref: '#/components/schemas/IDList'
+            components:
+              $ref: '#/components/schemas/IDList'
+#
+# View definitions for use case data
+#
+
+    UseCaseBaseData:
+      allOf:
+        - $ref: '#/components/schemas/Named'
+    UseCaseBaseDataView:
+      allOf:
+        - $ref: '#/components/schemas/UseCaseBaseData'
+        - $ref: '#/components/schemas/DataView'
+    UseCaseDataView:
+      allOf:
+        - $ref: '#/components/schemas/UseCaseBaseDataView'
+        - type: object
+          properties:
+            comments:
+              $ref: '#/components/schemas/IDList'
+            actors:
+              $ref: '#/components/schemas/IDList'
+            risks:
+              $ref: '#/components/schemas/IDList'
+            criterias:
+              $ref: '#/components/schemas/IDList'
+            components:
+              $ref: '#/components/schemas/IDList'
+            dependendUseCases:
+              type: array
+              items:
+                $ref: '#/components/schemas/DependendUseCaseDataView'
+    DependendUseCaseDataView:
+      type: object
+      properties:
+        useCaseID:
+          type: string
+        dependencyType:
+          type: string
+          enum:
+            - EXTENDS
+            - INCLUDES
+            - IMPLEMENTS
+    UseCaseListView:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/UseCaseDataView'
+
+#
+# View definitions for component data
+#
+
+    ComponentBaseData:
+      allOf:
+        - $ref: '#/components/schemas/Named'
+    ComponentBaseDataView:
+      allOf:
+        - $ref: '#/components/schemas/ComponentBaseData'
+        - $ref: '#/components/schemas/DataView'
+    ComponentDataView:
+      allOf:
+        - $ref: '#/components/schemas/ComponentBaseDataView'
+        - type: object
+          properties:
+            comments:
+              $ref: '#/components/schemas/IDList'
+            usecases:
+              $ref: '#/components/schemas/IDList'
+            risks:
+              $ref: '#/components/schemas/IDList'
+    ComponentListView:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComponentDataView'
+
+#
+# View definitions for actor data
+#
+
+    ActorBaseData:
+      allOf:
+        - $ref: '#/components/schemas/Named'
+    ActorBaseDataView:
+      allOf:
+        - $ref: '#/components/schemas/ActorBaseData'
+        - $ref: '#/components/schemas/DataView'
+    ActorDataView:
+      allOf:
+        - $ref: '#/components/schemas/ActorBaseDataView'
+        - type: object
+          properties:
+            comments:
+              $ref: '#/components/schemas/IDList'
+            usecases:
+              $ref: '#/components/schemas/IDList'
+    ActorListView:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActorDataView'
+#
+# Risk data
+#
+    RiskBaseData:
+      allOf:
+        - $ref: '#/components/schemas/Named'
+        - type: object
+          properties:
+            severity:
+              type: string
+            likelyhood:
+              type: string
+    RiskBaseDataView:
+      allOf:
+        - $ref: '#/components/schemas/RiskBaseData'
+        - $ref: '#/components/schemas/DataView'
+
+    RiskDataView:
+      allOf:
+        - $ref: '#/components/schemas/RiskBaseDataView'
+        - type: object
+          properties:
+            comments:
+              $ref: '#/components/schemas/IDList'
+            usecases:
+              $ref: '#/components/schemas/IDList'
+            components:
+              $ref: '#/components/schemas/IDList'
+
+
+# 
+# Acceptance criteria data
+#
+
+    CriteriaBaseData:
+      allOf:
+        - $ref: '#/components/schemas/Named'
+    CriteriaBaseDataView:
+      allOf:
+        - $ref: '#/components/schemas/CriteriaBaseData'
+        - $ref: '#/components/schemas/DataView'
+
+
+
+#
+# Common command definitions
+#
+    Command:
+      type: object
+      description: Base object for commands
+      properties:
+        messageId: 
+          type: string
+          description: A unique message id has to be provided for this command. This command will be provcessed exactly once.
+        comment: 
+          type: string
+        commandType:
+          type: string
+      required: 
+        - messageId
+        - commandType
+          
+    AddCommentCommand:
+      type: object
+      description: Add an comment to the related entity.
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - type: object
+          properties: 
+            comment: 
+              type: string
+
+#
+# Risk management related commands
+#
+    RiskInstanceCommand:
+      type: object
+      description: Commands that may be applied to an existing risk definition
+      oneOf:
+        - $ref: '#/components/schemas/RiskEditCommand'
+        - $ref: '#/components/schemas/RiskDeleteCommand'
+        - $ref: '#/components/schemas/AddCommentCommand'
+        - $ref: '#/components/schemas/LinkRiskToUsecaseCommand'
+      discriminator:
+        propertyName: commandType
+        mapping:
+          RiskEdit: '#/components/schemas/RiskEditCommand'
+          RiskDelete: '#/components/schemas/RiskDeleteCommand'
+          RiskAddComment: '#/components/schemas/AddCommentCommand'
+          RiskLinkUseCase: '#/components/schemas/LinkRiskToUsecaseCommand'
+    RiskEditCommand:
+      type: object
+      description: Creates a new risk definition.
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - $ref: '#/components/schemas/RiskBaseData'
+
+    RiskDeleteCommand:
+      type: object
+      description: Deletes a risk definition, those risks cannot be accessed anymore
+      allOf:
+        - $ref: '#/components/schemas/Command'
+
+#
+# Acceptance criteria related commands
+#
+    CriteriaInstanceCommand:
+      type: object
+      description: Commands that may be applied to an existing acceptance criteria.
+      oneOf:
+        - $ref: '#/components/schemas/CriteriaEditCommand'
+        - $ref: '#/components/schemas/CriteriaDeleteCommand'
+        - $ref: '#/components/schemas/AddCommentCommand'
+        - $ref: '#/components/schemas/LinkCriteriaToUsecaseCommand'
+      discriminator:
+        propertyName: commandTyp
+        mapping:
+          CriteriaEdit: '#/components/schemas/CriteriaEditCommand'
+          CriteriaDelete: '#/components/schemas/CriteriaDeleteCommand'
+          CriteriaAddComment: '#/components/schemas/AddCommentCommand'
+          CriteriaLinkUseCase: '#/components/schemas/LinkCriteriaToUsecaseCommand'
+          
+    CriteriaEditCommand:
+      type: object
+      description: Creates a new  acceptance criteria.
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - $ref: '#/components/schemas/CriteriaBaseData'
+
+    CriteriaDeleteCommand:
+      type: object
+      description: Deletes a acceptance criteria, those cannot be accessed anymore
+      allOf:
+        - $ref: '#/components/schemas/Command'
+
+#
+# Actor related commands
+#
+    ActorInstanceCommand:
+      type: object
+      description: Commands that may be applied to an existing actor.
+      oneOf:
+        - $ref: '#/components/schemas/ActorEditCommand'
+        - $ref: '#/components/schemas/ActorDeleteCommand'
+        - $ref: '#/components/schemas/AddCommentCommand'
+        - $ref: '#/components/schemas/LinkActorToUsecaseCommand'
+      discriminator:
+        propertyName: commandTyp
+        mapping:
+          ActorEdit: '#/components/schemas/ActorEditCommand'
+          ActorDelete: '#/components/schemas/ActorDeleteCommand'
+          ActorAddComment: '#/components/schemas/AddCommentCommand'
+          ActorLinkUseCase: '#/components/schemas/LinkActorToUsecaseCommand'
+          
+    ActorEditCommand:
+      type: object
+      description: Creates a new  actor.
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - $ref: '#/components/schemas/ActorBaseData'
+
+    ActorDeleteCommand:
+      type: object
+      description: Deletes a actor, those cannot be accessed anymore
+      allOf:
+        - $ref: '#/components/schemas/Command'
+
+
+#
+# Component related commands
+#
+    ComponentInstanceCommand:
+      type: object
+      description: Commands that may be applied to an existing acceptance criteria.
+      oneOf:
+        - $ref: '#/components/schemas/ComponentEditCommand'
+        - $ref: '#/components/schemas/ComponentDeleteCommand'
+        - $ref: '#/components/schemas/AddCommentCommand'
+        - $ref: '#/components/schemas/LinkComponentToUsecaseCommand'
+      discriminator:
+        propertyName: commandTyp
+        mapping:
+          ComponentEdit: '#/components/schemas/ComponentEditCommand'
+          ComponentDelete: '#/components/schemas/ComponentDeleteCommand'
+          ComponentAddComment: '#/components/schemas/AddCommentCommand'
+          ComponentLinkUseCase: '#/components/schemas/LinkComponentToUsecaseCommand'
+    ComponentEditCommand:
+      type: object
+      description: Creates a new  component.
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - $ref: '#/components/schemas/ComponentBaseData'
+
+    ComponentDeleteCommand:
+      type: object
+      description: Deletes a comonent, those cannot be accessed anymore
+      allOf:
+        - $ref: '#/components/schemas/Command'
+
+
+
+#
+# Usecase related commands
+#
+    UseCaseInstanceCommand:
+      type: object
+      description: Commands that may be applied to an existing use case definition.
+      oneOf:
+        - $ref: '#/components/schemas/UseCaseEditCommand'
+        - $ref: '#/components/schemas/UseCaseDeleteCommand'
+        - $ref: '#/components/schemas/AddCommentCommand'
+        - $ref: '#/components/schemas/LinkRiskToUsecaseCommand'
+        - $ref: '#/components/schemas/RiskEditCommand'
+        - $ref: '#/components/schemas/LinkDependendUsecaseCommand'
+        - $ref: '#/components/schemas/LinkActorToUsecaseCommand'
+        - $ref: '#/components/schemas/LinkCriteriaToUsecaseCommand'
+        - $ref: '#/components/schemas/LinkComponentToUsecaseCommand'
+      discriminator:
+        propertyName: commandType
+        mapping:
+          UseCaseEdit: '#/components/schemas/UseCaseEditCommand'
+          UseCaseDelete: '#/components/schemas/UseCaseDeleteCommand'
+          UseCaseAddComment: '#/components/schemas/AddCommentCommand'
+          UseCaseLinkRisk: '#/components/schemas/LinkRiskToUsecaseCommand'
+          UseCaseCreateRisk: '#/components/schemas/RiskEditCommand'
+          UseCaseLinkDependency: '#/components/schemas/LinkDependendUsecaseCommand'
+          UseCaseLinkActor: '#/components/schemas/LinkActorToUsecaseCommand'
+          UseCaseLinkCriteria: '#/components/schemas/LinkCriteriaToUsecaseCommand'
+          UseCaseLinkComponent: '#/components/schemas/LinkComponentToUsecaseCommand'
+    UseCaseEditCommand:
+      type: object
+      description: Creates a new usecase.
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - $ref: '#/components/schemas/UseCaseBaseData'
+
+    UseCaseDeleteCommand:
+      type: object
+      description: Deletes a use case, those use cases cannot be accessed anymore
+      allOf:
+        - $ref: '#/components/schemas/Command'
+
+    LinkDependendUsecaseCommand:
+      type: object
+      description: link the dependend use case with the provided id to the related use case
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - type: object
+          properties:
+            dependencyType:
+              type: string
+              enum:
+                - INCLUDES
+                - EXTENDS
+                - IMPLEMENTS
+            usecaseIdSrc:
+              type: string
+            usecaseIdTarget:
+              type: string
+          required:
+            - usecaseIdSrc
+            - usecaseIdTarget
+            - dependencyType
+
+    LinkComponentToUsecaseCommand:
+      type: object
+      description: link the component with the provided id to the related use case
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - type: object
+          properties:
+            componentId:
+              type: string
+            usecaseId:
+              type: string
+          required:
+            - componentId
+            - usecaseId
+ 
+    LinkActorToUsecaseCommand:
+      type: object
+      description: link the actor with the provided id to the related use case
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - type: object
+          properties:
+            actorId:
+              type: string
+            usecaseId:
+              type: string
+          required:
+            - actorId
+            - usecaseId
+    
+    LinkCriteriaToUsecaseCommand:
+      type: object
+      description: link the acceptance criteria with the provided id to the related use case
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - type: object
+          properties:
+            criteriaId:
+              type: string
+            usecaseId:
+              type: string
+          required:
+            - criteriaId
+            - usecaseId
+    
+    LinkRiskToUsecaseCommand:
+      type: object
+      description: link the risk with the provided id to the related use case
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - type: object
+          properties:
+            riskId:
+              type: string
+            usecaseId:
+              type: string
+          required:
+            - riskId
+            - usecaseId
+#
+# Project commands
+#
+    ProjectInstanceCommand:
+      type: object
+      description: Commands that may be applied to an existing project.
+      oneOf:
+        - $ref: '#/components/schemas/ProjectEditCommand'
+        - $ref: '#/components/schemas/ProjectLockCommand'
+        - $ref: '#/components/schemas/ProjectUnlockCommand'
+        - $ref: '#/components/schemas/AddCommentCommand'
+      discriminator:
+        propertyName: commandType
+        mapping:
+          ProjectEdit: '#/components/schemas/ProjectEditCommand'
+          ProjectLock: '#/components/schemas/ProjectLockCommand'
+          ProjectUnlock: '#/components/schemas/ProjectUnlockCommand'
+          ProjectAddComment: '#/components/schemas/AddCommentCommand'
+    ProjectEditCommand:
+      type: object
+      description: Creates a new  project.
+      allOf:
+        - $ref: '#/components/schemas/Command'
+        - $ref: '#/components/schemas/ProjectBaseData'
+    ProjectLockCommand:
+      type: object
+      description: Locks an project. A locked project cannot be changed anymore. Can only be applied to unlocked projects.
+      allOf:
+        - $ref: '#/components/schemas/Command'
+    ProjectUnlockCommand:
+      type: object
+      description: Unlocks an project. can only be applied to locked projects
+      allOf:
+        - $ref: '#/components/schemas/Command'
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+  responses:
+    Success:
+      description: The request was handled successfully.
+    Forbidden:
+      description: >-
+        The HTTP 403 Forbidden client error status response code indicates that
+        the server understood the request but refuses to authorize it.
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: The requested resource was not found
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InvalidInput:
+      description: Content provided for this request was invalid
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    DuplicateMessageId:
+      description: The command with the provided messageId was already successfully processed.
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  
