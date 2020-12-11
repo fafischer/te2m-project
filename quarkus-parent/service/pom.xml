@@ -12,8 +12,12 @@
 
 	<artifactId>service</artifactId>
 
-	<name>te2m Project Backend Service</name>
+	<properties>
+		<docker.image.tag>${project.version}</docker.image.tag>
+		<docker.repository>fafischer</docker.repository>
+	</properties>
 
+	<name>te2m Project Backend Service</name>
 	<dependencies>
 		<dependency>
 			<groupId>de.te2m.project</groupId>
@@ -74,9 +78,55 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- docker build -->
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>dockerfile-maven-plugin</artifactId>
+				<version>1.4.10</version>
+				<configuration>
+					<contextDirectory>${dockerfile.contextDirectory}</contextDirectory>
+					<repository>${docker.repository}/${docker.image.name}</repository>
+				</configuration>
+				<executions>
+					<execution>
+						<id>tag-latest</id>
+						<goals>
+							<goal>build</goal>
+							<goal>tag</goal>
+							<goal>push</goal>
+						</goals>
+						<configuration>
+							<tag>latest</tag>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tag-version</id>
+						<goals>
+							<goal>build</goal>
+							<goal>tag</goal>
+							<goal>push</goal>
+						</goals>
+						<configuration>
+							<tag>${docker.image.tag}</tag>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	<profiles>
+		<profile>
+			<id>jvm</id>
+			<activation>
+				<property>
+					<name>!native</name>
+				</property>
+			</activation>
+			<properties>
+				<dockerfile.contextDirectory>src/main/docker/jvm</dockerfile.contextDirectory>
+				<docker.image.name>${project.artifactId}-jvm</docker.image.name>
+			</properties>
+		</profile>
 		<profile>
 			<id>native</id>
 			<activation>
@@ -84,6 +134,10 @@
 					<name>native</name>
 				</property>
 			</activation>
+			<properties>
+				<dockerfile.contextDirectory>src/main/docker/native</dockerfile.contextDirectory>
+				<quarkus.package.type>native</quarkus.package.type>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -107,9 +161,6 @@
 					</plugin>
 				</plugins>
 			</build>
-			<properties>
-				<quarkus.package.type>native</quarkus.package.type>
-			</properties>
 		</profile>
 	</profiles>
 </project>

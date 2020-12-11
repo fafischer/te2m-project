@@ -9,7 +9,24 @@
 
 	<name>te2m Project Parent</name>
 	<description>Requirement management</description>
-
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>ffi</id>
+			<name>Frank Fischer</name>
+			<email>frank@te2m.de</email>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>Europe/Berlin</timezone>
+		</developer>
+	</developers>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>11</java.version>
@@ -27,14 +44,63 @@
 
 		<quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-		<quarkus.version>1.8.1.Final</quarkus.version>
+		<!-- 1.8.1.Final -->
+		<quarkus.version>1.10.3.Final</quarkus.version>
 		<quarkus-plugin.version>${quarkus.version}</quarkus-plugin.version>
 		<quarkus.platform.version>${quarkus.version}</quarkus.platform.version>
 		<surefire-plugin.version>2.22.1</surefire-plugin.version>
 
 		<frontend-plugin.version>1.10.0</frontend-plugin.version>
-
+		<dockerfile.contextDirectory>${project.build.directory}/docker</dockerfile.contextDirectory>
+		<dockerfile.contentDirectory>${dockerfile.contextDirectory}/app_home</dockerfile.contentDirectory>
 	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>6.0.1</version>
+				<configuration>
+					<!-- This is project specific configuration, but needs to go here to be
+                         applicable for both, regular build-lifecylce and site-lifecycle. -->
+
+					<!-- "assembly" refers to .NET, but there is no such thing here -->
+					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+					<!-- LOW: 0.1-3.9; MEDIUM: 4-6.9; HIGH: 7-8.9; CRITICAL: 9.0-10 -->
+					<suppressionFile>${basedir}/cve-suppressions.xml</suppressionFile>
+				</configuration>
+				<executions>
+					<execution>
+						<id>default-check</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-aggregate</id>
+						<phase>site</phase>
+						<goals>
+							<goal>aggregate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.7.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>3.0.0</version>
+			</plugin>
+		</plugins>
+	</build>
 	<modules>
 		<module>openapi</module>
 		<!--<module>openapi-quarkus-impl</module>-->

@@ -7,7 +7,7 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native -t quarkus/web-api-secure .
+# docker build -f src/main/docker/Dockerfile -t quarkus/web-api-secure .
 #
 # Then run the container using:
 #
