@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+		 xmlns="http://maven.apache.org/POM/4.0.0">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>de.te2m.project</groupId>
+		<artifactId>quarkus-parent</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../</relativePath>
+	</parent>
+
+	<artifactId>openapi-impl</artifactId>
+
+	<name>te2m Project Backend Service OpenAPI Impl</name>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-api</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>de.te2m.project</groupId>
+									<artifactId>openapi</artifactId>
+									<version>${parent.version}</version>
+									<classifier>openapi</classifier>
+									<type>yaml</type>
+									<outputDirectory>${project.build.directory}/openapi/project-api</outputDirectory>
+									<destFileName>openapi.yaml</destFileName>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>4.3.1</version>
+				<configuration>
+					<generatorName>jaxrs-spec</generatorName>
+
+					<generateApis>true</generateApis>
+					<generateApiTests>true</generateApiTests>
+					<apiTests>true</apiTests>
+					<generateApiDocumentation>true</generateApiDocumentation>
+					<generateModels>true</generateModels>
+					<generateModelTests>true</generateModelTests>
+					<generateModelDocumentation>true</generateModelDocumentation>
+					<generateSupportingFiles>true</generateSupportingFiles>
+					<typeMappings>
+						<typeMapping>number=java.math.BigDecimal</typeMapping>
+						<typeMapping>integer=java.math.BigInteger</typeMapping>
+					</typeMappings>
+
+					<configOptions>
+						<sourceFolder>src/main/java</sourceFolder>
+
+						<useTags>true</useTags>
+						<delegatePattern>false</delegatePattern>
+						
+						<!--<interfaceOnly>true</interfaceOnly>-->
+
+						<serializableModel>true</serializableModel>
+
+						<booleanGetterPrefix>is</booleanGetterPrefix>
+						<dateLibrary>java8</dateLibrary>
+						<java8>true</java8>
+						<library>quarkus</library>
+					</configOptions>
+
+					<skipIfSpecIsUnchanged>true</skipIfSpecIsUnchanged>
+					<!-- <skipOverwrite>true</skipOverwrite> -->
+					<addCompileSourceRoot>true</addCompileSourceRoot>
+				</configuration>
+				<executions>
+					<execution>
+						<id>generate-server-project-api</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>${project.build.directory}/openapi/project-api/openapi.yaml</inputSpec>
+							<invokerPackage>de.te2m.project.api.impl</invokerPackage>
+							<apiPackage>de.te2m.project.api.impl</apiPackage>
+							<modelPackage>de.te2m.project.api.impl.model</modelPackage>
+							<output>${project.build.directory}/generated-sources/openapi/project-api</output>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
